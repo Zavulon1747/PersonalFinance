@@ -1,7 +1,7 @@
+import settings.Settings;
 import settings.Text;
 
 import java.awt.*;
-import java.io.File;
 import java.io.IOException;
 
 public class PersonalFinance {
@@ -12,10 +12,11 @@ public class PersonalFinance {
     }
 
     private static void init() {
-        Text.init();
-        GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
         try {
-            ge.registerFont(Font.createFont(Font.TRUETYPE_FONT, new File("fonts/Roboto.ttf")));
+            Settings.init();
+            Text.init();
+            GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+            ge.registerFont(Font.createFont(Font.TRUETYPE_FONT, Settings.FONT_ROBOTO));
         } catch (FontFormatException | IOException e) {
             System.out.println("Шрифт не найден!");;
         }
