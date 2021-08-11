@@ -11,7 +11,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.prefs.Preferences;
 
-public class Settings {
+public final class Settings {
 
     public static final File FONT_ROBOTO = new File("fonts/Roboto.ttf");
     public static final File SAVE_DIR = new File("saves/");
