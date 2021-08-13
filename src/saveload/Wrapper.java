@@ -23,6 +23,7 @@ public class Wrapper {
     public void setArticles(List<Article> articles) {
         this.articles = articles;
     }
+
     @XmlElement(name = "accounts")
     public List<Account> getAccounts() {
         return accounts;
@@ -31,6 +32,7 @@ public class Wrapper {
     public void setAccounts(List<Account> accounts) {
         this.accounts = accounts;
     }
+
     @XmlElement(name = "transactions")
     public List<Transaction> getTransactions() {
         return transactions;
@@ -39,6 +41,7 @@ public class Wrapper {
     public void setTransactions(List<Transaction> transactions) {
         this.transactions = transactions;
     }
+
     @XmlElement(name = "transfers")
     public List<Transfer> getTransfers() {
         return transfers;
@@ -47,6 +50,7 @@ public class Wrapper {
     public void setTransfers(List<Transfer> transfers) {
         this.transfers = transfers;
     }
+
     @XmlElement(name = "currencies")
     public List<Currency> getCurrencies() {
         return currencies;
