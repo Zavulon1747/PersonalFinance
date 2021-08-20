@@ -1,6 +1,7 @@
 package model;
 
 import exception.ModelException;
+import saveload.SaveData;
 
 import java.util.List;
 import java.util.Objects;
@@ -12,17 +13,18 @@ public class Account extends Common {
     private double startAmount;
     private double amount;
 
-    public Account() {}
+    public Account() {
+    }
 
     public Account(String title, Currency currency, double startAmount) throws ModelException {
-        if (title.length()==0) throw new ModelException(ModelException.TITLE_EMPTY);
+        if (title.length() == 0) throw new ModelException(ModelException.TITLE_EMPTY);
         if (currency == null) throw new ModelException(ModelException.CURRENCY_EMPTY);
         this.title = title;
         this.currency = currency;
         this.startAmount = startAmount;
     }
 
-    public double getAmount () {
+    public double getAmount() {
         return amount;
     }
 
@@ -68,7 +70,7 @@ public class Account extends Common {
         return title;
     }
 
-    public  void setAmountFromTransactionAndTransfers (List<Transaction> transactions, List<Transfer> transfers) {
+    public void setAmountFromTransactionAndTransfers(List<Transaction> transactions, List<Transfer> transfers) {
         this.amount = startAmount;
         for (Transaction transaction : transactions) {
             if (transaction.getAccount().equals(this)) {
@@ -77,12 +79,28 @@ public class Account extends Common {
         }
         for (Transfer transfer : transfers) {
             if (transfer.getFromAccount().equals(this)) {
-                this.amount-= transfer.getFromAmount();
+                this.amount -= transfer.getFromAmount();
             }
             if (transfer.getToAccount().equals(this)) {
-                this.amount+= transfer.getToAmount();
+                this.amount += transfer.getToAmount();
             }
         }
+    }
+
+    @Override
+    public void postAdd(SaveData sd) {
+        setAmountFromTransactionAndTransfers(sd.getTransactions(), sd.getTransfers());
+    }
+
+    @Override
+    public void postEdit(SaveData sd) {
+        for (Transaction t : sd.getTransactions())
+            if (t.getAccount().equals(sd.getOldCommon())) t.setAccount(this);
+        for (Transfer t : sd.getTransfers()) {
+            if (t.getFromAccount().equals(sd.getOldCommon())) t.setFromAccount(this);
+            if (t.getToAccount().equals(sd.getOldCommon())) t.setToAccount(this);
+        }
+        setAmountFromTransactionAndTransfers(sd.getTransactions(), sd.getTransfers());
     }
 
 }

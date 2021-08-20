@@ -1,6 +1,7 @@
 package model;
 
 import exception.ModelException;
+import saveload.SaveData;
 
 import java.util.Objects;
 
@@ -49,4 +50,12 @@ public class Article extends Common {
     public String getValueForComboBox() {
         return title;
     }
+
+    @Override
+    public void postEdit(SaveData sd) {
+        for (Transaction t : sd.getTransactions()) {
+            if (t.getArticle().equals(sd.getOldCommon())) t.setArticle(this);
+        }
+    }
+
 }

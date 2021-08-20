@@ -1,8 +1,10 @@
 package saveload;
 
+import exception.ModelException;
 import model.*;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 public class SaveData {
@@ -15,13 +17,55 @@ public class SaveData {
     private List<Transaction> transactions = new ArrayList<>();
     private List<Transfer> transfers = new ArrayList<>();
 
-    private SaveData() {
+    private final Filter filter;
+    private Common oldCommon;
+    private boolean saved = true;
 
+    private SaveData() {
+        load();
+        this.filter = new Filter();
+    }
+
+    public void load() {
+        SaveLoad.load(this);
+        sort();
+    }
+
+    private void sort() {
+        this.articles.sort((Article t, Article t1) -> (t.getTitle().compareToIgnoreCase(t1.getTitle())));
+        this.accounts.sort((Account t, Account t1) -> (t.getTitle().compareToIgnoreCase(t1.getTitle())));
+        this.transactions.sort((Transaction t, Transaction t1) -> (int) (t1.getDate().compareTo(t.getDate())));
+        this.transfers.sort((Transfer t, Transfer t1) -> (int) (t1.getDate().compareTo(t.getDate())));
+        this.currencies.sort(new Comparator<Currency>() {
+            @Override
+            public int compare(Currency c, Currency c1) {
+                if (c.isBase()) return -1;
+                if (c1.isBase()) return 1;
+                if (c.isOn() ^ c1.isOn()) {
+                    if (c1.isOn()) return 1;
+                    else return -1;
+                }
+                return c.getTitle().compareToIgnoreCase(c1.getTitle());
+            }
+        });
+    }
+
+    public void save () {
+        SaveLoad.save(this);
+        saved = true;
+    }
+
+    public boolean isSaved() {
+        return saved;
     }
 
     public static SaveData getInstance() {
         if (instance == null) instance = new SaveData();
         return instance;
+    }
+
+    public  Filter getFilter() {
+        return filter;
     }
 
     public List<Article> getArticles() {
@@ -71,4 +115,81 @@ public class SaveData {
         return new Currency();
     }
 
+    public ArrayList<Currency> getEnableCurrencies() {
+        ArrayList<Currency> list = new ArrayList<>();
+        for (Currency c : currencies) {
+            if (c.isOn()) list.add(c);
+        }
+        return list;
+    }
+
+    public List<Transaction> getFilterTransactions () {
+        ArrayList<Transaction> list = new ArrayList<>();
+        for (Transaction t : transactions) {
+            if (filter.check(t.getDate())) list.add(t);
+        }
+        return list;
+    }
+
+    public List<Transfer> getFilterTransfers () {
+        ArrayList<Transfer> list = new ArrayList<>();
+        for (Transfer t : transfers) {
+            if (filter.check(t.getDate())) list.add(t);
+        }
+        return list;
+    }
+
+    public List<Transaction> getTransactionsOnCount (int count) {
+        return new ArrayList<>(transactions.subList(0, Math.min(count, transactions.size())));
+    }
+
+    public Common getOldCommon () {
+        return oldCommon;
+    }
+
+    public void add(Common c) throws ModelException {
+        List ref = getRef(c);
+        if (ref.contains(c)) throw new ModelException(ModelException.IS_EXISTS);
+        ref.add(c);
+        c.postAdd(this);
+        sort();
+        saved = false;
+    }
+
+    public void edit(Common oldC, Common newC) throws ModelException {
+        List ref = getRef(oldC);
+        if (ref.contains(newC) && oldC != ref.get(ref.indexOf(newC))) throw new ModelException(ModelException.IS_EXISTS);
+        ref.set(ref.indexOf(oldC), newC);
+        oldCommon = oldC;
+        newC.postEdit(this);
+        sort();
+        saved = false;
+    }
+
+    public void remove(Common c) {
+        getRef(c).remove(c);
+        c.postRemove(this);
+        sort();
+        saved = false;
+    }
+
+    private List getRef(Common common) {
+        if (common instanceof Account) return accounts;
+        else if (common instanceof Article) return articles;
+        else if (common instanceof Transaction) return transactions;
+        else if (common instanceof Transfer) return transfers;
+        else if (common instanceof Currency) return currencies;
+        return null;
+    }
+
+    @Override
+    public String toString() {
+        return "SaveData{" +
+                "articles=" + articles +
+                ", accounts=" + accounts +
+                ", currencies=" + currencies +
+                ", transactions=" + transactions +
+                ", transfers=" + transfers +
+                '}';
+    }
 }
